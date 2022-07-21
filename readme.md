@@ -1,6 +1,9 @@
 ## Dataset used:
 https://github.com/int-brain-lab/paper-behavior
 
+### Guide to IBL code library
+https://int-brain-lab.github.io/iblenv/
+
 
 ## Method:
 To study animal decision-making behavior, studies have used two alternative choice tasks (2AFC) in which mice learn via trial and error to choose the correct location of a stimulus displayed on the left or right of a computer screen. The mice are motivated via the delivery of reward when correct and streaks of reward are a succession of trials with either correct or wrong choices. We propose to investigate whether there is a correlation between past streaks of rewards or failures and changes in the current choice of the mice during training on a 2AFC task, in standardized experiments designed by the International Brain Laboratory.
