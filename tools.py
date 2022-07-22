@@ -12,10 +12,11 @@ def length_last_streak(all_trials,current_trial,streak_type=1):
         len_last_streak:  length of streak of streak_type preceding the current_trial. None if not current type or streak length <2
     """
     len_last_streak = None
-    grouped_before_index = [list(g) for k,g in groupby(all_trials[:current_trial])] #index is excluded
-    if grouped_before_index[-1][0] == streak_type:
-    
-        if len(grouped_before_index[-1]) > 1:
-            len_last_streak = len(grouped_before_index[-1])
+    if current_trial > 0:
+        grouped_before_index = [list(g) for k,g in groupby(all_trials[:current_trial])] #index is excluded
+        if grouped_before_index[-1][0] == streak_type:
+        
+            if len(grouped_before_index[-1]) > 1:
+                len_last_streak = len(grouped_before_index[-1])
     
     return len_last_streak
