@@ -171,3 +171,99 @@ def get_streak_length(lab, percentage):
   y = y.astype("float")
 
   return (X, y)
+
+
+def please_work(lab,percentage,verbose = False):
+  # works on previous version of get_streak_length
+    """ Returns streak of rewards and/or punishments before all trials with 50/50 probability, for all mice in chosen lab, with chosen training percentage.
+
+    Parameters
+    ----------    
+    lab    : input string
+    percentage    : input int
+
+    Output
+    ------    
+    Output :
+    2D array with size (features x samples)
+    1D array with size samples
+    """
+
+
+    lab_mice_in_training = behavior_analyses.SessionTrainingStatus & 'training_status = "in_training" ' & (subject.SubjectLab & 'lab_name = "{}"'.format(lab)) 
+    
+    lab_mice = np.unique(lab_mice_in_training.fetch('subject_uuid'))
+    print(np.shape(lab_mice))
+    id = lab_mice_in_training.fetch('subject_uuid')
+    training_days = np.zeros_like(lab_mice)
+
+    for idx, mouse in enumerate(lab_mice):
+      training_days[idx] = len(np.where(id == mouse)[0])
+
+    dictionary = fetch_mice_by_percentage(lab_mice,lab_mice_in_training,percentage)
+    X_0 = []   # contrast
+    X_1 = []   # feature 1, streaks of 2
+    X_2 = []   # feature 2, streaks of 3
+    X_3 = []   # feature 3, punishment streaks of 2
+    X_4 = []   # feature 4, punishment streaks of 3
+    X_5 = []   # water reward volume
+    
+    y = []
+    for m, mouse in enumerate(lab_mice):
+      if verbose:
+          print('For mouse ', m)
+      try:
+        for i in range(len(dictionary[mouse])):
+          if verbose:
+            print('and session ',i)
+          session, contrast_left, contrast_right, volume = ((behavior.TrialSet.Trial & {'subject_uuid' : mouse} & {'trial_stim_prob_left': 0.5}) & {'session_start_time' : dictionary[mouse][i]}).fetch('trial_feedback_type','trial_stim_contrast_left','trial_stim_contrast_right','trial_reward_volume')
+            
+          is_nan = np.argwhere(np.isnan(volume))[:,0]
+          if len(is_nan) == len(session) : # all the session is to throw away
+
+            # OPTION 1
+            print('Sorry, cannot use this piece of data')
+
+            if verbose:
+              #print('Here are the reward volumes')
+              #print(reward_volumes)
+              #print('during session', i)      
+              print('is the reward information for the session useless (all nan)? ' ,len(is_nan) == len(session))
+              if len(is_nan) != len(session):
+                    print('How many nan are there in this session? ',len(is_nan))                  
+              print()
+            # we are actually not adding the data to the output!
+            continue 
+                # OPTION 2
+                # reward_volumes = np.nan_to_num(reward_volumes, nan= 123456789)
+
+          elif len(is_nan) != len(session) and len(is_nan) != 0:
+            raise Exception("Sorry, I dont know how to deal with missing water reward information in few trials only")
+          else:
+            if verbose:
+              print('water reward info present !')
+              
+          x_0 = contrast_left + contrast_right
+          x_1 = search_sequence(session,2,1) 
+          x_2 = search_sequence(session,3,1)
+          x_3 = search_sequence(session,2,-1) 
+          x_4 = search_sequence(session,3,-1)
+          x_5 = volume
+
+          X_0 = np.append(X_0,x_0)
+          X_1 = np.append(X_1,x_1)
+          X_2 = np.append(X_2,x_2)
+          X_3 = np.append(X_3,x_3)
+          X_4 = np.append(X_4,x_4)
+          X_5 = np.append(X_5,x_5)
+
+          y = np.append(y,session)
+      except:
+        pass
+    
+
+    X = np.vstack((X_0,X_1,X_2,X_3,X_4,X_5))
+    X = X.astype("float")
+    y = y.astype("float")
+
+    return (X, y)
