@@ -129,3 +129,45 @@ def get_streak_data(lab,percentage,features):
       pass
     
   return(X[:,1:],y.astype('int'))
+
+def get_streak_length(lab, percentage):
+  lab_mice_in_training = behavior_analyses.SessionTrainingStatus & 'training_status = "in_training" ' & (subject.SubjectLab & 'lab_name = "{}"'.format(lab)) 
+  lab_mice = np.unique(lab_mice_in_training.fetch('subject_uuid'))
+
+  id = lab_mice_in_training.fetch('subject_uuid')
+  training_days = np.zeros_like(lab_mice)
+
+  for idx, mouse in enumerate(lab_mice):
+    training_days[idx] = len(np.where(id == mouse)[0])
+
+  dictionary = fetch_mice_by_percentage(lab_mice,lab_mice_in_training,percentage)
+  # print(dictionary)
+
+  X_0=[]
+  X_1=[]
+  X_2=[]
+
+  y = []
+  for mouse in lab_mice:
+    try:
+      for i in range(len(dictionary[mouse])):
+        session, contrast_left, contrast_right = ((behavior.TrialSet.Trial & {'subject_uuid' : mouse} & {'trial_stim_prob_left': 0.5}) & {'session_start_time' : dictionary[mouse][i]}).fetch('trial_feedback_type',
+        'trial_stim_contrast_left',
+        'trial_stim_contrast_right')
+        
+        x_0 = contrast_left + contrast_right
+        x_pos = [length_last_streak(session,j,1) for j in range(len(session))]
+        x_neg = [length_last_streak(session,j,-1) for j in range(len(session))]
+
+        X_0 = np.append(X_0,x_0)
+        X_1 = np.append(X_1,x_pos)
+        X_2 = np.append(X_2,x_neg)
+
+        y = np.append(y,session)
+    except:
+      pass
+  X = np.vstack((X_0,X_1,X_2))
+  X = X.astype("float")
+  y = y.astype("float")
+
+  return (X, y)
