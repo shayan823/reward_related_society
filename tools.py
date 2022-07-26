@@ -118,4 +118,4 @@ def get_streak_data(lab,percentage,features):
     except:
       pass
     
-  return(X[:,1:],y)
+  return(X[:,1:],y.astype('int'))
