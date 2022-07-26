@@ -1,6 +1,16 @@
 import numpy as np
 from itertools import groupby
 
+import datajoint as dj
+
+dj.config["database.host"] = "datajoint-public.internationalbrainlab.org"
+dj.config["database.user"] = "ibl-public"
+dj.config["database.password"] = "ibl-public" 
+from nma_ibl import reference, subject, action, acquisition, data, behavior, behavior_analyses
+
+
+
+
 def length_last_streak(all_trials,current_trial,streak_type=1):
     """ Gives length of streak of streak_type preceding the current_trial
     Args:
